@@ -84,9 +84,13 @@ def visualize_homograpy(img1, img2, H):
     point4 = np.array([0, height-1, 1])
     # transfer the points with affine transformation to get the new point on img2
     new_point1 = H @ point1
+    new_point1 = new_point1/new_point1[2]
     new_point2 = H @ point2
+    new_point2 = new_point2/new_point2[2]
     new_point3 = H @ point3
+    new_point3 = new_point3/new_point3[2]
     new_point4 = H @ point4
+    new_point4 = new_point4/new_point4[2]
     # draw the line
     cv2.line(img2, (int(new_point1[0]), int(new_point1[1])), (int(new_point2[0]), int(new_point2[1])), (255,0,0), 3)
     cv2.line(img2, (int(new_point2[0]), int(new_point2[1])), (int(new_point3[0]), int(new_point3[1])), (255,0,0), 3)
@@ -98,8 +102,9 @@ def visualize_homograpy(img1, img2, H):
 
 test_path = '../data/test'
 cover_path = '../data/DVDcovers'
-cover = cover_path + '/reference.png'
-test = test_path + '/image_01.jpeg'
+# cover = cover_path + '/reference.png'
+cover = cover_path + '/matrix.jpg'
+test = test_path + '/image_07.jpeg'
 
 cover = cv2.imread(cover)
 cv2.imshow("cover", cover)
@@ -153,16 +158,16 @@ optimal_H = RANSAC_find_optimal_Homography(correspondences)
 # dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
 # optimal_H_build, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 1)
 # import pdb;pdb.set_trace()
-h,w = cover.shape[:2]
-pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-dst = cv2.perspectiveTransform(pts,optimal_H)
-test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-cv2.imshow("found", test)
+# h,w = cover.shape[:2]
+# pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+# dst = cv2.perspectiveTransform(pts,optimal_H)
+# test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
+# cv2.imshow("found", test)
 
 ## draw match lines
 # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
 
 # cv2.imshow("orb_match", res);
-# visualize_homograpy(cover, test, optimal_H)
+visualize_homograpy(cover, test, optimal_H)
 
 cv2.waitKey();cv2.destroyAllWindows()
