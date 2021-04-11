@@ -1,4 +1,4 @@
-from sift import *
+from feature import *
 import cv2
 import numpy as np
 from skimage import io
@@ -151,7 +151,10 @@ cv2.waitKey(0)
 # cv2.waitKey();cv2.destroyAllWindows()
 ######################
 
-correspondences = SIFT_match_points(cover, test)
+fd = FeatureDetector()
+correspondences = fd.detect_and_match(cover, test)
+
+# correspondences = SIFT_match_points(cover, test)
 optimal_H = RANSAC_find_optimal_Homography(correspondences)
 
 # src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
