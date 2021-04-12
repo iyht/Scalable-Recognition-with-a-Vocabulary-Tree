@@ -11,8 +11,9 @@ class Node:
         self.value = None
         self.kmeans = None
         self.children = []
-        self.imgs_count = {}
+        # self.imgs_count = {}
         self.occurrences_in_img = {}
+        self.index = None
         # self.img_count = {}
 
 class Database:
@@ -30,6 +31,7 @@ class Database:
         self.feature_start_idx = [] # feature_start_idx[i] store the start index of img i's descriptor in all_des
         self.kmeans = None
         self.total_words_in_img = {}
+        self.word_counts = 0
 
         self.vocabulary_tree = None
         
@@ -83,9 +85,18 @@ class Database:
     def run_KMeans(self, num_clusters):
         # self.word_count = np.zeros(num_clusters)
         # self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
-        self.vocabulary_tree = self.hierarchical_KMeans(3,1, self.all_des)
-        import pdb;pdb.set_trace()
+        self.vocabulary_tree = self.hierarchical_KMeans(3,3, self.all_des)
+        self.print_tree(self.vocabulary_tree)
+        # import pdb;pdb.set_trace()
 
+
+    def print_tree(self, node):
+        children = node.children
+        if len(children) == 0:
+            print(node.index)
+        else:
+            for c in children:
+                self.print_tree(c)
 
     
 
@@ -98,6 +109,10 @@ class Database:
 
         # we reach the leaf node
         if L == 0:
+            # assign the index to the leaf nodes.
+            root.index = self.word_counts
+            self.word_counts += 1
+
             # count the number of occurrences of a word in a image used in tf-idf
             for pair in root.value:
                 img_path = pair[1]
@@ -122,41 +137,56 @@ class Database:
             root.children.append(node_i)
         return root
         
-
-
-
-
-
-    def build_inverted_file_index(self):
-        for i in range(len(self.num_feature_per_image)):
-            n_feature_img_i = self.num_feature_per_image[i]
-            img_path_i = self.all_image[i]
-            start_idx = self.feature_start_idx[i]
-            end_idx = start_idx + n_feature_img_i 
-            for j in range(start_idx, end_idx):
-                d_ij = self.all_des[j]
-                # calculate the norm to all the centers to check which W does the d_ij belongs to
-                norm = np.linalg.norm(self.kmeans.cluster_centers_ - d_ij, axis=1)
-                word_idx = np.argmin(norm)
-                self.word_count[word_idx] += 1
-
-                # update the word_to_img dictionary
-                if word_idx in self.word_to_img:
-                    if img_path_i in self.word_to_img[word_idx]:
-                        # import pdb; pdb.set_trace()
-                        self.word_to_img[word_idx][img_path_i] += 1
-                    else:
-                        self.word_to_img[word_idx][img_path_i] = 1
+    
+    def build_histgram(self, node):
+        children = node.children
+        if len(children) == 0:
+            for img, count in node.occurrences_in_img.items():
+                print(img)
+                if img not in self.img_to_histgram:
+                    self.img_to_histgram[img] = np.zeros(self.word_counts)
+                    self.img_to_histgram[img][node.index] += count
                 else:
-                    self.word_to_img[word_idx] = {}
-                    self.word_to_img[word_idx][img_path_i] = 1
+                    self.img_to_histgram[img][node.index] += count
+        else:
+            for c in children:
+                self.build_histgram(c)
 
-                # acculate the bad-of-word description in img_to_histgram dictionary
-                n_clusters = norm.shape[0]
-                if img_path_i in self.img_to_histgram:
-                    self.img_to_histgram[img_path_i][word_idx] += 1
-                else:
-                    self.img_to_histgram[img_path_i] = np.zeros(n_clusters)
+
+
+
+
+
+    # def build_inverted_file_index(self):
+    #     for i in range(len(self.num_feature_per_image)):
+    #         n_feature_img_i = self.num_feature_per_image[i]
+    #         img_path_i = self.all_image[i]
+    #         start_idx = self.feature_start_idx[i]
+    #         end_idx = start_idx + n_feature_img_i 
+    #         for j in range(start_idx, end_idx):
+    #             d_ij = self.all_des[j]
+    #             # calculate the norm to all the centers to check which W does the d_ij belongs to
+    #             norm = np.linalg.norm(self.kmeans.cluster_centers_ - d_ij, axis=1)
+    #             word_idx = np.argmin(norm)
+    #             self.word_count[word_idx] += 1
+
+    #             # update the word_to_img dictionary
+    #             if word_idx in self.word_to_img:
+    #                 if img_path_i in self.word_to_img[word_idx]:
+    #                     # import pdb; pdb.set_trace()
+    #                     self.word_to_img[word_idx][img_path_i] += 1
+    #                 else:
+    #                     self.word_to_img[word_idx][img_path_i] = 1
+    #             else:
+    #                 self.word_to_img[word_idx] = {}
+    #                 self.word_to_img[word_idx][img_path_i] = 1
+
+    #             # acculate the bad-of-word description in img_to_histgram dictionary
+    #             n_clusters = norm.shape[0]
+    #             if img_path_i in self.img_to_histgram:
+    #                 self.img_to_histgram[img_path_i][word_idx] += 1
+    #             else:
+    #                 self.img_to_histgram[img_path_i] = np.zeros(n_clusters)
 
     # def query(self, input_img, top_K, method):
     #     # compute the features
@@ -218,35 +248,37 @@ class Database:
     #     # TODO: spatial verification
     #     return best_K_match_imgs
 
+    def get_leaf_nodes(self, root, des):
+        children = root.children
+        if children == 0:
+            return root
+        
+        norm = np.linalg.norm(root.kmeans.cluster_centers_ - des, axis=1)
+        child_idx = np.argmin(norm)
+        get_leaf_nodes(children[child_idx], des)
 
     def query(self, input_img, top_K, method):
         # compute the features
         fd = FeatureDetector()
         kpts, des = fd.detect(input_img, method=method)
 
-        # compute bag-of-word description
-        # import pdb;pdb.set_trace()
-        n_clusters = self.kmeans.cluster_centers_.shape[0]
-        BoW_q = np.zeros(n_clusters)
-
-        # loop all the des to get all the visual words of the input_img
+        q = np.zeros(self.word_counts)
+        node_lst = []
         for d in des:
-            norm = np.linalg.norm(self.kmeans.cluster_centers_ - d, axis=1)
-            word_idx = np.argmin(norm)
-            BoW_q[word_idx] += 1
+            node = self.get_leaf_nodes(self.vocabulary_tree, d)
+            node_lst.append(node)
+            q[node.index] += 1
 
         # get a list of img from database that have the same visual words
         target_img_lst = []
-        for w in range(len(BoW_q)):
-            if BoW_q[w] != 0:
-                images_dict = self.word_to_img[w]
-                for i in images_dict:
-                    if i not in target_img_lst:
-                        target_img_lst.append(i)
+        for n in node_lst:
+            for img, count in n.occurrences_in_img.items():
+                target_img_lst.append(img)
+
+
         # compute similarity between query BoW and the all targets 
         similarity_lst = np.zeros(len(target_img_lst))
 
-        q = np.zeros(n_clusters)
         for j in range(len(target_img_lst)):
             img = target_img_lst[j]
             t = np.zeros(n_clusters)
@@ -300,7 +332,9 @@ cover_path = '../data/DVDcovers'
 
 db.loadImgs(cover_path, des_method='ORB')
 db.run_KMeans(30)
-db.build_inverted_file_index()
+db.build_histgram(db.vocabulary_tree)
+import pdb;pdb.set_trace()
+# db.build_inverted_file_index()
 # db.save('data_.txt')
 
 ## load test
