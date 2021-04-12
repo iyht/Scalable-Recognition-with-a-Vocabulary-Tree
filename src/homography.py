@@ -152,7 +152,7 @@ cv2.waitKey(0)
 ######################
 
 fd = FeatureDetector()
-correspondences = fd.detect_and_match(cover, test)
+correspondences = fd.detect_and_match(cover, test, method='ORB')
 
 # correspondences = SIFT_match_points(cover, test)
 optimal_H = RANSAC_find_optimal_Homography(correspondences)

@@ -4,9 +4,13 @@ import imghdr
 import time
 from feature import *
 import pickle
-
-
 from sklearn.cluster import KMeans
+
+class Node:
+    def __init__(self):
+        self.value = None
+        self.children = []
+        self.img_count = {}
 
 class Database:
     def __init__(self):
@@ -47,8 +51,29 @@ class Database:
         # import pdb; pdb.set_trace()
     
     def run_KMeans(self, num_clusters):
-        self.word_count = np.zeros(num_clusters)
-        self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
+        # self.word_count = np.zeros(num_clusters)
+        # self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
+        root = self.hierarchical_KMeans(3, 5, self.all_des)
+        import pdb;pdb.set_trace()
+
+
+    
+
+    def hierarchical_KMeans(self, k, L, all_vec):
+        # root find the center
+        root = Node()
+        root.value = KMeans(n_clusters=k, random_state=0).fit(all_vec)
+        if L == 0:
+            return root
+        for i in range(k):
+            cluster_i = all_vec[root.value.labels_ == i]
+            node_i = self.hierarchical_KMeans(k, L-1, cluster_i)
+            root.children.append(node_i)
+        return root
+        
+
+
+
 
 
     def build_inverted_file_index(self):
@@ -109,23 +134,30 @@ class Database:
         # compute similarity between query BoW and the all targets 
         similarity_lst = np.zeros(len(target_img_lst))
 
-        BoW_q = BoW_q/np.linalg.norm(BoW_q)
+        q = np.zeros(n_clusters)
         for j in range(len(target_img_lst)):
             img = target_img_lst[j]
             t = np.zeros(n_clusters)
             t =self.img_to_histgram[img] 
-            # for w in range(n_clusters):
-            #     n_id = self.img_to_histgram[img][w]
-            #     n_d = np.sum(self.img_to_histgram[img])
-            #     # n_i = self.word_count[w]
-            #     # N = len(self.all_des)
-            #     n_i = len(self.word_to_img[w])
-            #     N = self.num_imgs
-            #     t[w] = (n_id/n_d) * np.log(N/n_i)
-            #     # import pdb;pdb.set_trace()
+            for w in range(n_clusters):
+                n_wj = self.img_to_histgram[img][w]
+                n_j = np.sum(self.img_to_histgram[img])
+                # n_w = self.word_count[w]
+                # N = len(self.all_des)
+                n_w = len(self.word_to_img[w])
+                N = self.num_imgs
+                t[w] = (n_wj/n_j) * np.log(N/n_w)
+                if j == 0:
+                    n_wq = BoW_q[w]
+                    n_q = np.sum(BoW_q)
+                    q[w] = (n_wq / n_q) * np.log(N/n_w)
+
+            if j == 0:
+                q = q/np.linalg.norm(q)
+                # import pdb;pdb.set_trace()
             t = t/np.linalg.norm(t)
             # normalize dot product
-            similarity_lst[j] = np.dot(t, BoW_q)
+            similarity_lst[j] = np.linalg.norm(t-q)
 
         # sort the similarity and take the top_K most similar image
         best_K_match_imgs_idx = np.argsort(similarity_lst)[-top_K:][::-1]
@@ -156,16 +188,16 @@ db = Database()
 test_path = '../data/test'
 cover_path = '../data/DVDcovers'
 
-# db.loadImgs(cover_path, des_method='ORB')
-# db.run_KMeans(40)
-# db.build_inverted_file_index()
+db.loadImgs(cover_path, des_method='ORB')
+db.run_KMeans(30)
+db.build_inverted_file_index()
 # db.save('data_.txt')
 
 ## load test
-db.load('data_.txt')
+# db.load('data_.txt')
 # cover = cover_path + '/matrix.jpg'
-test = test_path + '/image_03.jpeg'
+test = test_path + '/image_07.jpeg'
 # test = 'test.png'
 test = cv2.imread(test)
-print(db.query(test, 20, method='ORB'))
+print(db.query(test, 50, method='ORB'))
 import pdb;pdb.set_trace()

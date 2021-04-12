@@ -30,8 +30,8 @@ class FeatureDetector():
         - a list of tuple in format e.g., 
         [([kp2.x, kp2.y, 1], [kp1.x, kp1.y, 1], ratio), ..., ()]
         '''
+        result = []
         if method == 'SIFT':
-            result = []
             for i in range(len(des1)):
                 # Compare each key point from img1 with all the key point from img2
                 # to find the smallest_distance, and the second_smallest_distance
@@ -56,11 +56,11 @@ class FeatureDetector():
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
             matches = bf.match(des1, des2)
             dmatches = sorted(matches, key = lambda x:x.distance)
-            src_pts  = np.float32([kpts1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
-            dst_pts  = np.float32([kpts2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
+            src_pts  = np.float32([kp1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
+            dst_pts  = np.float32([kp2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
             for i in range(len(src_pts)):
-                result.append((np.append(src_pts[i].pt, [1]), \
-                               np.append(dst_pts[i].pt, [1])))
+                result.append((np.append(src_pts[i], [1]), \
+                               np.append(dst_pts[i], [1])))
         return result
     
     def detect_and_match(self, img1, img2, method='SIFT'):
