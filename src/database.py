@@ -31,7 +31,7 @@ class Database:
         self.feature_start_idx = [] # feature_start_idx[i] store the start index of img i's descriptor in all_des
         self.kmeans = None
         self.total_words_in_img = {}
-        self.word_counts = 0
+        self.word_idx_count = 0
 
         self.vocabulary_tree = None
         
@@ -82,10 +82,12 @@ class Database:
         self.all_des = np.array(self.all_des, dtype=object)
         # import pdb; pdb.set_trace()
     
-    def run_KMeans(self, num_clusters):
-        # self.word_count = np.zeros(num_clusters)
+    def run_KMeans(self, k, L):
         # self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
-        self.vocabulary_tree = self.hierarchical_KMeans(3,3, self.all_des)
+        total_nodes = (k*(k**L)-1)/(k-1)
+        n_leafs = k**L
+        self.word_count = np.zeros(n_leafs)
+        self.vocabulary_tree = self.hierarchical_KMeans(k,L, self.all_des)
         self.print_tree(self.vocabulary_tree)
         # import pdb;pdb.set_trace()
 
@@ -110,8 +112,8 @@ class Database:
         # we reach the leaf node
         if L == 0:
             # assign the index to the leaf nodes.
-            root.index = self.word_counts
-            self.word_counts += 1
+            root.index = self.word_idx_count
+            self.word_idx_count += 1
 
             # count the number of occurrences of a word in a image used in tf-idf
             for pair in root.value:
@@ -121,12 +123,15 @@ class Database:
                 else:
                     root.occurrences_in_img[img_path] += 1
             
-            # accumulate the total numbre of words of a image used in tf-idf
-            for img_path, count in root.occurrences_in_img.items():
-                if img_path not in self.total_words_in_img:
-                    self.total_words_in_img[img_path] = count
-                else:
-                    self.total_words_in_img[img_path] += count
+            self.word_count[root.index] = len(root.occurrences_in_img)
+            # # accumulate the total numbre of words of a image used in tf-idf
+            # for img_path, count in root.occurrences_in_img.items():
+            #     if img_path not in self.total_words_in_img:
+            #         self.total_words_in_img[img_path] = count
+            #     else:
+            #         self.total_words_in_img[img_path] += count
+
+            # calculate the number of occurrences of word in the whole database
             return root
 
         # if we are not on the leaf level, then for each cluster, 
@@ -142,9 +147,9 @@ class Database:
         children = node.children
         if len(children) == 0:
             for img, count in node.occurrences_in_img.items():
-                print(img)
+                # print(img)
                 if img not in self.img_to_histgram:
-                    self.img_to_histgram[img] = np.zeros(self.word_counts)
+                    self.img_to_histgram[img] = np.zeros(self.word_idx_count)
                     self.img_to_histgram[img][node.index] += count
                 else:
                     self.img_to_histgram[img][node.index] += count
@@ -250,19 +255,20 @@ class Database:
 
     def get_leaf_nodes(self, root, des):
         children = root.children
-        if children == 0:
+        if len(children) == 0:
+            # import pdb;pdb.set_trace()
             return root
         
         norm = np.linalg.norm(root.kmeans.cluster_centers_ - des, axis=1)
         child_idx = np.argmin(norm)
-        get_leaf_nodes(children[child_idx], des)
+        return self.get_leaf_nodes(children[child_idx], des)
 
     def query(self, input_img, top_K, method):
         # compute the features
         fd = FeatureDetector()
         kpts, des = fd.detect(input_img, method=method)
 
-        q = np.zeros(self.word_counts)
+        q = np.zeros(self.word_idx_count)
         node_lst = []
         for d in des:
             node = self.get_leaf_nodes(self.vocabulary_tree, d)
@@ -273,38 +279,43 @@ class Database:
         target_img_lst = []
         for n in node_lst:
             for img, count in n.occurrences_in_img.items():
-                target_img_lst.append(img)
-
+                if img not in target_img_lst:
+                    target_img_lst.append(img)
 
         # compute similarity between query BoW and the all targets 
         similarity_lst = np.zeros(len(target_img_lst))
 
+        # import pdb;pdb.set_trace()
         for j in range(len(target_img_lst)):
             img = target_img_lst[j]
-            t = np.zeros(n_clusters)
+            t = np.zeros(self.word_idx_count)
             t =self.img_to_histgram[img] 
-            for w in range(n_clusters):
+            for w in range(self.word_idx_count):
                 n_wj = self.img_to_histgram[img][w]
                 n_j = np.sum(self.img_to_histgram[img])
-                # n_w = self.word_count[w]
-                # N = len(self.all_des)
-                n_w = len(self.word_to_img[w])
+                n_w = self.word_count[w]
+                # # N = len(self.all_des)
+                # n_w = len(self.word_to_img[w])
                 N = self.num_imgs
                 t[w] = (n_wj/n_j) * np.log(N/n_w)
                 if j == 0:
-                    n_wq = BoW_q[w]
-                    n_q = np.sum(BoW_q)
+                    n_wq = q[w]
+                    n_q = np.sum(q)
                     q[w] = (n_wq / n_q) * np.log(N/n_w)
 
-            if j == 0:
-                q = q/np.linalg.norm(q)
+            # if j == 0:
+                # q = q /np.linalg.norm(q)
                 # import pdb;pdb.set_trace()
-            t = t/np.linalg.norm(t)
+            # t = t /np.linalg.norm(t)
             # normalize dot product
-            similarity_lst[j] = np.linalg.norm(t-q)
+            # similarity_lst[j] = np.linalg.norm(t-q, ord=1)
+            similarity_lst[j] = 2 + np.sum(np.abs(q - t) - np.abs(q) - np.abs(t)) 
+
+
 
         # sort the similarity and take the top_K most similar image
-        best_K_match_imgs_idx = np.argsort(similarity_lst)[-top_K:][::-1]
+        # best_K_match_imgs_idx = np.argsort(similarity_lst)[-top_K:][::-1]
+        best_K_match_imgs_idx = np.argsort(similarity_lst)[:top_K]
         best_K_match_imgs = [target_img_lst[i] for i in best_K_match_imgs_idx]
         import pdb;pdb.set_trace()
 
@@ -330,18 +341,18 @@ db = Database()
 test_path = '../data/test'
 cover_path = '../data/DVDcovers'
 
-db.loadImgs(cover_path, des_method='ORB')
-db.run_KMeans(30)
-db.build_histgram(db.vocabulary_tree)
-import pdb;pdb.set_trace()
+# db.loadImgs(cover_path, des_method='SIFT')
+# db.run_KMeans(k=5, L=5)
+# db.build_histgram(db.vocabulary_tree)
+# import pdb;pdb.set_trace()
 # db.build_inverted_file_index()
 # db.save('data_.txt')
 
 ## load test
-# db.load('data_.txt')
+db.load('data_.txt')
 # cover = cover_path + '/matrix.jpg'
-test = test_path + '/image_07.jpeg'
+test = test_path + '/image_02.jpeg'
 # test = 'test.png'
 test = cv2.imread(test)
-print(db.query(test, 50, method='ORB'))
+print(db.query(test, 50, method='SIFT'))
 import pdb;pdb.set_trace()
