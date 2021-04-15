@@ -41,7 +41,7 @@ def num_round_needed(p, k, P):
     S = np.log(1 - P) / np.log(1 - p**k)
     return int(S)
 
-def RANSAC_find_optimal_Homography(correspondences):
+def RANSAC_find_optimal_Homography(correspondences, num_rounds=None):
     '''
     Input:
     - correspondences: a list of tuple that stores the correspondences 
@@ -52,7 +52,7 @@ def RANSAC_find_optimal_Homography(correspondences):
     # project matched point and compute the difference
     optimal_H = None
     optimal_inliers = 0
-    num_rounds = num_round_needed(0.15, 4, 0.98)
+    num_rounds = num_rounds if num_rounds != None else num_round_needed(0.15, 4, 0.98)
     for i in range(num_rounds):
         # random sample 4 keypoint pairs
         sample_corr = random.sample(correspondences, 4)
@@ -70,7 +70,7 @@ def RANSAC_find_optimal_Homography(correspondences):
         if num_inliers > optimal_inliers:
             optimal_H = H
             optimal_inliers = num_inliers
-    return optimal_H
+    return optimal_inliers, optimal_H
 
 
 def visualize_homograpy(img1, img2, H):
@@ -102,17 +102,17 @@ def visualize_homograpy(img1, img2, H):
 
 test_path = '../data/test'
 cover_path = '../data/DVDcovers'
-# cover = cover_path + '/reference.png'
+# # cover = cover_path + '/reference.png'
 cover = cover_path + '/matrix.jpg'
 test = test_path + '/image_07.jpeg'
 
 cover = cv2.imread(cover)
-cv2.imshow("cover", cover)
-cv2.waitKey(0)
+# cv2.imshow("cover", cover)
+# cv2.waitKey(0)
 # test = cv2.imread('./test.png')
 test = cv2.imread(test)
-cv2.imshow("test", test)
-cv2.waitKey(0)
+# cv2.imshow("test", test)
+# cv2.waitKey(0)
 
 ######################
 # orb = cv2.ORB_create()
@@ -152,10 +152,10 @@ cv2.waitKey(0)
 ######################
 
 fd = FeatureDetector()
-correspondences = fd.detect_and_match(cover, test, method='ORB')
+correspondences = fd.detect_and_match(cover, test, method='SIFT')
 
 # correspondences = SIFT_match_points(cover, test)
-optimal_H = RANSAC_find_optimal_Homography(correspondences)
+_,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
 
 # src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
 # dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
@@ -173,4 +173,4 @@ optimal_H = RANSAC_find_optimal_Homography(correspondences)
 # cv2.imshow("orb_match", res);
 visualize_homograpy(cover, test, optimal_H)
 
-cv2.waitKey();cv2.destroyAllWindows()
+# cv2.waitKey();cv2.destroyAllWindows()
