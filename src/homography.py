@@ -6,6 +6,8 @@ from skimage import draw
 from skimage import transform
 import random
 from matplotlib import pyplot as pl
+random.seed(999)
+
 
 
 def homography(correspondences):
@@ -52,7 +54,7 @@ def RANSAC_find_optimal_Homography(correspondences, num_rounds=None):
     # project matched point and compute the difference
     optimal_H = None
     optimal_inliers = 0
-    num_rounds = num_rounds if num_rounds != None else num_round_needed(0.15, 4, 0.98)
+    num_rounds = num_rounds if num_rounds != None else num_round_needed(0.15, 4, 0.95)
     for i in range(num_rounds):
         # random sample 4 keypoint pairs
         sample_corr = random.sample(correspondences, 4)
@@ -65,12 +67,12 @@ def RANSAC_find_optimal_Homography(correspondences, num_rounds=None):
             projected_pt1 = H @ pt1
             projected_pt1 /= projected_pt1[2]
             loss = np.linalg.norm(pt2 - projected_pt1)
-            if loss < 4:
+            if loss < 5:
                 num_inliers += 1
         if num_inliers > optimal_inliers:
             optimal_H = H
             optimal_inliers = num_inliers
-    return optimal_inliers, optimal_H
+    return optimal_inliers/len(correspondences), optimal_H
 
 
 def visualize_homograpy(img1, img2, H):
@@ -89,78 +91,80 @@ def visualize_homograpy(img1, img2, H):
 
     return result
 
+if __name__ == '__main__':
 
-test_path = '../data/test'
-cover_path = '../data/DVDcovers'
-# # cover = cover_path + '/reference.png'
-cover = cover_path + '/matrix.jpg'
-test = test_path + '/image_07.jpeg'
+    test_path = '../data/test'
+    cover_path = '../data/DVDcovers'
+    # # cover = cover_path + '/reference.png'
+    cover = cover_path + '/o_brother_where_art_thou.jpg'
+    test = test_path + '/image_02.jpeg'
 
-# cover = cv2.imread(cover)
-# cv2.imshow("cover", cover)
-# cv2.waitKey(0)
-# test = cv2.imread('./test.png')
-# test = cv2.imread(test)
-# cv2.imshow("test", test)
-# cv2.waitKey(0)
+    cover = cv2.imread(cover)
+    cv2.imshow("cover", cover)
+    cv2.waitKey(0)
+    # test = cv2.imread('./test.png')
+    test = cv2.imread(test)
+    cv2.imshow("test", test)
+    cv2.waitKey(0)
 
-######################
-# orb = cv2.ORB_create()
+    ######################
+    # orb = cv2.ORB_create()
 
-# gray2 = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
-# gray1 = cv2.cvtColor(cover, cv2.COLOR_BGR2GRAY)
+    # gray2 = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
+    # gray1 = cv2.cvtColor(cover, cv2.COLOR_BGR2GRAY)
 
-# ## Find the keypoints and descriptors with ORB
-# kpts1, descs1 = orb.detectAndCompute(gray1,None)
-# kpts2, descs2 = orb.detectAndCompute(gray2,None)
+    # ## Find the keypoints and descriptors with ORB
+    # kpts1, descs1 = orb.detectAndCompute(gray1,None)
+    # kpts2, descs2 = orb.detectAndCompute(gray2,None)
 
-# ## match descriptors and sort them in the order of their distance
-# bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-# matches = bf.match(descs1, descs2)
-# dmatches = sorted(matches, key = lambda x:x.distance)
+    # ## match descriptors and sort them in the order of their distance
+    # bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    # matches = bf.match(descs1, descs2)
+    # dmatches = sorted(matches, key = lambda x:x.distance)
 
-# ## extract the matched keypoints
-# src_pts  = np.float32([kpts1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
-# dst_pts  = np.float32([kpts2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
+    # ## extract the matched keypoints
+    # src_pts  = np.float32([kpts1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
+    # dst_pts  = np.float32([kpts2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
 
-## find homography matrix and do perspective transform
-# M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-# h,w = cover.shape[:2]
-# pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-# dst = cv2.perspectiveTransform(pts,M)
+    ## find homography matrix and do perspective transform
+    # M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+    # h,w = cover.shape[:2]
+    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+    # dst = cv2.perspectiveTransform(pts,M)
 
-# ## draw found regions
-# test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-# cv2.imshow("found", test)
+    # ## draw found regions
+    # test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
+    # cv2.imshow("found", test)
 
-# ## draw match lines
-# res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
+    # ## draw match lines
+    # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
 
-# cv2.imshow("orb_match", res);
+    # cv2.imshow("orb_match", res);
 
-# cv2.waitKey();cv2.destroyAllWindows()
-######################
+    # cv2.waitKey();cv2.destroyAllWindows()
+    ######################
 
-# fd = FeatureDetector()
-# correspondences = fd.detect_and_match(cover, test, method='SIFT')
+    fd = FeatureDetector()
+    correspondences = fd.detect_and_match(cover, test, method='SIFT')
 
-# correspondences = SIFT_match_points(cover, test)
-# _,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
+    # correspondences = SIFT_match_points(cover, test)
+    _,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
+    print(optimal_H)
 
-# src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
-# dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
-# optimal_H_build, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 1)
-# import pdb;pdb.set_trace()
-# h,w = cover.shape[:2]
-# pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-# dst = cv2.perspectiveTransform(pts,optimal_H)
-# test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-# cv2.imshow("found", test)
+    # src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
+    # dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
+    # optimal_H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 7)
+    # import pdb;pdb.set_trace()
+    # h,w = cover.shape[:2]
+    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+    # dst = cv2.perspectiveTransform(pts,optimal_H)
+    # test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
+    # cv2.imshow("found", test)
 
-## draw match lines
-# res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
+    ## draw match lines
+    # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
 
-# cv2.imshow("orb_match", res);
-# visualize_homograpy(cover, test, optimal_H)
+    # cv2.imshow("orb_match", res);
+    visualize_homograpy(cover, test, optimal_H)
 
-# cv2.waitKey();cv2.destroyAllWindows()
+    # cv2.waitKey();cv2.destroyAllWindows()
