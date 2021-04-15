@@ -157,7 +157,7 @@ class Database:
             img = cv2.imread(img_path)
             correspondences = fd.detect_and_match(img, query, method=method)
             print('Running RANSAC with {}'.format(img_path))
-            inliers, optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=1000)
+            inliers, optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=1500)
             if best_inliers < inliers:
                 best_inliers = inliers
                 best_img_path = img_path
@@ -219,14 +219,15 @@ class Database:
         
         start = time.time()
         best_img, best_img_path, best_H= self.spatial_verification(input_img, best_K_match_imgs, method)
-        # visualize_homograpy(best_img, input_img, optimal_H)
+        visualize_homograpy(best_img, input_img, best_H)
 
-        h,w = best_img.shape[:2]
-        pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-        dst = cv2.perspectiveTransform(pts,best_H)
-        test = cv2.polylines(input_img, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-        cv2.imshow("found", test)
-        cv2.waitKey(0)
+        # h,w = best_img.shape[:2]
+        # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+        # dst = cv2.perspectiveTransform(pts,best_H)
+        # import pdb;pdb.set_trace()
+        # test = cv2.polylines(input_img, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
+        # cv2.imshow("found", test)
+        # cv2.waitKey(0)
 
         ## draw match lines
         # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
@@ -261,7 +262,7 @@ def build_database(load_path, k, L, method, save_path):
     print('Building Histgram for each images')
     db.build_histgram(db.vocabulary_tree)
 
-    print('Building BoW for each images')
+    # print('Building BoW for each images')
     db.build_BoW()
 
     print('Saving the database to {}'.format(save_path))
@@ -283,5 +284,5 @@ db.load('data_sift.txt')
 test = test_path + '/image_01.jpeg'
 # test = 'test.png'
 test = cv2.imread(test)
-print(db.query(test, 20, method='SIFT'))
+print(db.query(test, 10, method='SIFT'))
 import pdb;pdb.set_trace()

@@ -75,29 +75,19 @@ def RANSAC_find_optimal_Homography(correspondences, num_rounds=None):
 
 def visualize_homograpy(img1, img2, H):
     # calculate the affine transformation matrix
-    height = img1.shape[0]
-    width = img1.shape[1]
+    # h = img1.shape[0]
+    # w = img1.shape[1]
+    h,w = img1.shape[:2]
+
     # define the reference points
-    point1 = np.array([0, 0, 1])
-    point2 = np.array([width-1, 0, 1])
-    point3 = np.array([width-1, height-1, 1])
-    point4 = np.array([0, height-1, 1])
+    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+
     # transfer the points with affine transformation to get the new point on img2
-    new_point1 = H @ point1
-    new_point1 = new_point1/new_point1[2]
-    new_point2 = H @ point2
-    new_point2 = new_point2/new_point2[2]
-    new_point3 = H @ point3
-    new_point3 = new_point3/new_point3[2]
-    new_point4 = H @ point4
-    new_point4 = new_point4/new_point4[2]
-    # draw the line
-    cv2.line(img2, (int(new_point1[0]), int(new_point1[1])), (int(new_point2[0]), int(new_point2[1])), (255,0,0), 3)
-    cv2.line(img2, (int(new_point2[0]), int(new_point2[1])), (int(new_point3[0]), int(new_point3[1])), (255,0,0), 3)
-    cv2.line(img2, (int(new_point3[0]), int(new_point3[1])), (int(new_point4[0]), int(new_point4[1])), (255,0,0), 3)
-    cv2.line(img2, (int(new_point4[0]), int(new_point4[1])), (int(new_point1[0]), int(new_point1[1])), (255,0,0), 3)
-    cv2.imwrite('homo_visiual.png', img2)
-    return img2
+    dst = cv2.perspectiveTransform(pts,H)
+    result = cv2.polylines(img2, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
+    cv2.imwrite("homo_visiual.png", result)
+
+    return result
 
 
 test_path = '../data/test'
@@ -106,11 +96,11 @@ cover_path = '../data/DVDcovers'
 cover = cover_path + '/matrix.jpg'
 test = test_path + '/image_07.jpeg'
 
-cover = cv2.imread(cover)
+# cover = cv2.imread(cover)
 # cv2.imshow("cover", cover)
 # cv2.waitKey(0)
 # test = cv2.imread('./test.png')
-test = cv2.imread(test)
+# test = cv2.imread(test)
 # cv2.imshow("test", test)
 # cv2.waitKey(0)
 
@@ -151,11 +141,11 @@ test = cv2.imread(test)
 # cv2.waitKey();cv2.destroyAllWindows()
 ######################
 
-fd = FeatureDetector()
-correspondences = fd.detect_and_match(cover, test, method='SIFT')
+# fd = FeatureDetector()
+# correspondences = fd.detect_and_match(cover, test, method='SIFT')
 
 # correspondences = SIFT_match_points(cover, test)
-_,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
+# _,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
 
 # src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
 # dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
@@ -171,6 +161,6 @@ _,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
 # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
 
 # cv2.imshow("orb_match", res);
-visualize_homograpy(cover, test, optimal_H)
+# visualize_homograpy(cover, test, optimal_H)
 
 # cv2.waitKey();cv2.destroyAllWindows()
