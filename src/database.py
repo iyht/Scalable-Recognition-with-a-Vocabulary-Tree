@@ -186,7 +186,7 @@ class Database:
             img = cv2.imread(img_path)
             correspondences = fd.detect_and_match(img, query, method=method)
             print('Running RANSAC with {}'.format(img_path))
-            inliers, optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
+            inliers, optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=1000)
             if max_inliers < inliers:
                 max_inliers = inliers
                 max_img_path = img_path
@@ -366,7 +366,11 @@ class Database:
         print(best_K_match_imgs)
         print(score_lst)
         
+        
+        start = time.time()
         best_img = self.spatial_verification(input_img, best_K_match_imgs, method)
+        end = time.time()
+        print(end-start)
         return best_img
 
 
@@ -411,10 +415,10 @@ cover_path = '../data/DVDcovers'
 
 # build_database(cover_path, k=5, L=5, method='ORB', save_path='data_orb.txt')
 ## load test
-db.load('data_orb.txt')
+db.load('data_.txt')
 # cover = cover_path + '/matrix.jpg'
 test = test_path + '/image_07.jpeg'
 # test = 'test.png'
 test = cv2.imread(test)
-print(db.query(test, 20, method='ORB'))
+print(db.query(test, 20, method='SIFT'))
 import pdb;pdb.set_trace()
