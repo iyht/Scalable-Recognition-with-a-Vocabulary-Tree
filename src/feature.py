@@ -45,39 +45,6 @@ class FeatureDetector():
                 result.append((np.append(kp1[i].pt, [1]), \
                                np.append(kp2[smallest_idx].pt, [1]), \
                                ratio))
-            # for i in range(len(des1)):
-            #     # Compare each key point from img1 with all the key point from img2
-            #     # to find the smallest_distance, and the second_smallest_distance
-            #     smallest_distance = np.inf
-            #     second_smallest_distance = np.inf
-            #     smallest_j = 0
-
-            #     import pdb; pdb.set_trace()
-            #     distance = np.linalg.norm(des1[i] - des2[j])
-
-            #     for j in range(len(des2)):
-            #         distance = np.linalg.norm(des1[i] - des2[j])
-            #         if distance < smallest_distance:
-            #             second_smallest_distance = smallest_distance
-            #             smallest_distance = distance
-            #             smallest_j = j
-            #     ratio = smallest_distance / second_smallest_distance
-            #     # If the the ratio smaller than the threshold, then it means this correspondence is not 
-            #     # reliable. We are free to ignore this pair of matching point.
-            #     if ratio < 0.8:
-            #         # If the correspondence is reliable, then we add it to the result.
-            #         result.append((np.append(kp1[i].pt, [1]), \
-            #                        np.append(kp2[smallest_j].pt, [1]), \
-            #                        ratio))
-        # elif method == 'ORB':
-        #     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        #     matches = bf.match(des1, des2)
-        #     dmatches = sorted(matches, key = lambda x:x.distance)
-        #     src_pts  = np.float32([kp1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
-        #     dst_pts  = np.float32([kp2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
-        #     for i in range(len(src_pts)):
-        #         result.append((np.append(src_pts[i], [1]), \
-        #                        np.append(dst_pts[i], [1])))
         return result
     
     def detect_and_match(self, img1, img2, method='SIFT'):

@@ -1,0 +1,5 @@
+data/
+*.zip
+*.png
+src/*.txt
+src/__pycache__
