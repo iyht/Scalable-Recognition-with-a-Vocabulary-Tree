@@ -1,6 +1,6 @@
 .DS_Store
 data/
 *.zip
-*.png
+src/*.png
 src/*.txt
 src/__pycache__
