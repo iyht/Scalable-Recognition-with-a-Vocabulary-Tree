@@ -2,6 +2,17 @@
 The goal of this project is to recognize the DVD covers in the given image and retrieve from the database.The recognition scheme is based on paper from David et al., Scalable Recognition with a Vocabulary Tree[1].The paper present a recognition scheme that scales efficiently to large number of objects.
 
 
+# Folder Stucture
+```
++-- src
+    +-- database.py
+    +-- feature.py
+    +-- homography.py
++-- data
+    +-- DVDcovers
+    +-- test
++-- docs
+```
 # Run
 ```
 cd src
