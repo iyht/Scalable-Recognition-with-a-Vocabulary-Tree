@@ -146,13 +146,3 @@ def draw_circle(image, kp):
         image = cv2.circle(image, (int(pt[0]), int(pt[1])), int(kp[i].size), (0, 255, 0), 1)
     return image
 
-#test_path = '../data/test'
-#test_image1 = test_path + '/image_01.jpeg'
-#
-#img1 = cv2.imread(test_image1)
-#kp1, des1 = SIFT_match_points_single(img1)
-#import pdb;pdb.set_trace()
-#img1_draw = draw_circle(img1, kp1)
-#cv2.imshow("img1", img1)
-#cv2.imshow("img1_draw", img1_draw)
-#cv2.waitKey(0)

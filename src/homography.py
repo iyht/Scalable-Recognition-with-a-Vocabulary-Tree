@@ -61,18 +61,19 @@ def RANSAC_find_optimal_Homography(correspondences, num_rounds=None):
         # compute the homography
         H = homography(sample_corr)
         num_inliers = 0
+        # for pair in correspondences[:100]:
         for pair in correspondences:
             pt1 = pair[0]
             pt2 = pair[1]
             projected_pt1 = H @ pt1
             projected_pt1 /= projected_pt1[2]
             loss = np.linalg.norm(pt2 - projected_pt1)
-            if loss < 5:
+            if loss <= 20:
                 num_inliers += 1
         if num_inliers > optimal_inliers:
             optimal_H = H
             optimal_inliers = num_inliers
-    return optimal_inliers/len(correspondences), optimal_H
+    return optimal_inliers, optimal_H
 
 
 def visualize_homograpy(img1, img2, H):
@@ -86,85 +87,8 @@ def visualize_homograpy(img1, img2, H):
 
     # transfer the points with affine transformation to get the new point on img2
     dst = cv2.perspectiveTransform(pts,H)
-    result = cv2.polylines(img2, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-    cv2.imwrite("homo_visiual.png", result)
+    result = cv2.polylines(img2, [np.int32(dst)], True, (0,0,255), 2, cv2.LINE_AA)
+    cv2.imwrite("result.png", result)
 
     return result
 
-if __name__ == '__main__':
-
-    test_path = '../data/test'
-    cover_path = '../data/DVDcovers'
-    # # cover = cover_path + '/reference.png'
-    cover = cover_path + '/o_brother_where_art_thou.jpg'
-    test = test_path + '/image_02.jpeg'
-
-    cover = cv2.imread(cover)
-    cv2.imshow("cover", cover)
-    cv2.waitKey(0)
-    # test = cv2.imread('./test.png')
-    test = cv2.imread(test)
-    cv2.imshow("test", test)
-    cv2.waitKey(0)
-
-    ######################
-    # orb = cv2.ORB_create()
-
-    # gray2 = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
-    # gray1 = cv2.cvtColor(cover, cv2.COLOR_BGR2GRAY)
-
-    # ## Find the keypoints and descriptors with ORB
-    # kpts1, descs1 = orb.detectAndCompute(gray1,None)
-    # kpts2, descs2 = orb.detectAndCompute(gray2,None)
-
-    # ## match descriptors and sort them in the order of their distance
-    # bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    # matches = bf.match(descs1, descs2)
-    # dmatches = sorted(matches, key = lambda x:x.distance)
-
-    # ## extract the matched keypoints
-    # src_pts  = np.float32([kpts1[m.queryIdx].pt for m in dmatches]).reshape(-1,1,2)
-    # dst_pts  = np.float32([kpts2[m.trainIdx].pt for m in dmatches]).reshape(-1,1,2)
-
-    ## find homography matrix and do perspective transform
-    # M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
-    # h,w = cover.shape[:2]
-    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-    # dst = cv2.perspectiveTransform(pts,M)
-
-    # ## draw found regions
-    # test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-    # cv2.imshow("found", test)
-
-    # ## draw match lines
-    # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
-
-    # cv2.imshow("orb_match", res);
-
-    # cv2.waitKey();cv2.destroyAllWindows()
-    ######################
-
-    fd = FeatureDetector()
-    correspondences = fd.detect_and_match(cover, test, method='SIFT')
-
-    # correspondences = SIFT_match_points(cover, test)
-    _,optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
-    print(optimal_H)
-
-    # src_pts = np.float32([ t[0][:2] for t in correspondences ]).reshape(-1,1,2)
-    # dst_pts = np.float32([ t[1][:2] for t in correspondences ]).reshape(-1,1,2)
-    # optimal_H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 7)
-    # import pdb;pdb.set_trace()
-    # h,w = cover.shape[:2]
-    # pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
-    # dst = cv2.perspectiveTransform(pts,optimal_H)
-    # test = cv2.polylines(test, [np.int32(dst)], True, (0,0,255), 1, cv2.LINE_AA)
-    # cv2.imshow("found", test)
-
-    ## draw match lines
-    # res = cv2.drawMatches(cover, kpts1, test, kpts2, dmatches[:20],None,flags=2)
-
-    # cv2.imshow("orb_match", res);
-    visualize_homograpy(cover, test, optimal_H)
-
-    # cv2.waitKey();cv2.destroyAllWindows()

@@ -5,6 +5,7 @@ import time
 from feature import *
 from homography import *
 import pickle
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import KMeans
 
 class Node:
@@ -59,7 +60,6 @@ class Database:
         # turn the list into a np.array
         self.num_imgs = len(self.all_image)
         self.all_des = np.array(self.all_des, dtype=object)
-        # import pdb; pdb.set_trace()
     
     def run_KMeans(self, k, L):
         # self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
@@ -156,18 +156,14 @@ class Database:
         for img_path in img_path_lst:
             img = cv2.imread(img_path)
             correspondences = fd.detect_and_match(img, query, method=method)
-            print('Running RANSAC with {}'.format(img_path))
             inliers, optimal_H = RANSAC_find_optimal_Homography(correspondences, num_rounds=2000)
-            print(optimal_H)
-            print(inliers)
+            print('Running RANSAC... Image: {} Inliers: {}'.format(img_path, inliers))
 
             if best_inliers < inliers:
                 best_inliers = inliers
                 best_img_path = img_path
                 best_img = img
                 best_H = optimal_H
-        print(best_H)
-        print(best_img_path)
         return best_img, best_img_path, best_H
 
     def get_leaf_nodes(self, root, des):
@@ -217,11 +213,13 @@ class Database:
         # best_K_match_imgs_idx = np.argsort(score_lst)[-top_K:][::-1]
         best_K_match_imgs_idx = np.argsort(score_lst)[:top_K]
         best_K_match_imgs = [target_img_lst[i] for i in best_K_match_imgs_idx]
-        print("The {} best matches".format(top_K))
-        print(best_K_match_imgs)
+
+        for i in range(top_K):
+            print("{}: scores: {}, image: {}".format(i, score_lst[best_K_match_imgs_idx[i]], best_K_match_imgs[i]))
 
         best_img, best_img_path, best_H= self.spatial_verification(input_img, best_K_match_imgs, method)
-        print(best_H)
+        print('The best match image: {}'.format(best_img_path))
+        print('Homography: {}'.format(best_H))
         visualize_homograpy(best_img, input_img, best_H)
 
 
@@ -260,21 +258,19 @@ def build_database(load_path, k, L, method, save_path):
         
 
 
-
+# Define the test path and DVD cover path
 test_path = '../data/test'
 cover_path = '../data/DVDcovers'
 
-
+# Initial and build the database
 db = Database()
-# build_database(cover_path, k=5, L=5, method='SIFT', save_path='data_sift.txt')
-## load test
-# cover = cover_path + '/matrix.jpg'
+build_database(cover_path, k=5, L=5, method='SIFT', save_path='data_sift.txt')
 
-# load database
+# If we have already build and save the database, we can just load database directly
 print('Loading the database')
 db.load('data_sift.txt')
 
-# query
-test = test_path + '/image_04.jpeg'
+# query a image
+test = test_path + '/image_01.jpeg'
 test = cv2.imread(test)
 best_img, best_img_path, best_H, best_K= db.query(test, top_K = 10, method='SIFT')
