@@ -13,10 +13,8 @@ class Node:
         self.value = None
         self.kmeans = None
         self.children = []
-        # self.imgs_count = {}
         self.occurrences_in_img = {}
         self.index = None
-        # self.img_count = {}
 
 class Database:
     def __init__(self):
@@ -28,14 +26,11 @@ class Database:
         self.word_count = []
         self.img_to_histgram = {}
         self.all_des = [] # store all the descriptors for all the image in the database
-        self.all_kpts = [] # store all the keypointes  ...
         self.all_image = [] # store all the image paths ...
         self.num_feature_per_image = [] # store number of features for each images, we use it extra corresponding kpts/des
         self.feature_start_idx = [] # feature_start_idx[i] store the start index of img i's descriptor in all_des
         self.kmeans = None
-        self.total_words_in_img = {}
         self.word_idx_count = 0
-
         self.vocabulary_tree = None
         
 
@@ -50,7 +45,6 @@ class Database:
                 if (imghdr.what(img_path) != None and img_type in 'png/jpg/jpeg/'):
                     img = cv2.imread(img_path)
                     # get all the kpts and des for each images.
-                    # kpts, des = SIFT_match_points_single(img)
                     kpts, des = fd.detect(img, method)
                     self.all_des += [[d, img_path] for d in des.tolist()]
                     self.all_image.append(img_path)
@@ -62,13 +56,10 @@ class Database:
         self.all_des = np.array(self.all_des, dtype=object)
     
     def run_KMeans(self, k, L):
-        # self.kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(self.all_des)
         total_nodes = (k*(k**L)-1)/(k-1)
         n_leafs = k**L
         self.word_count = np.zeros(n_leafs)
         self.vocabulary_tree = self.hierarchical_KMeans(k,L, self.all_des)
-        self.print_tree(self.vocabulary_tree)
-        # import pdb;pdb.set_trace()
 
 
     def print_tree(self, node):
@@ -141,8 +132,6 @@ class Database:
                 n_wj = self.img_to_histgram[img][w]
                 n_j = np.sum(self.img_to_histgram[img])
                 n_w = self.word_count[w]
-                # # N = len(self.all_des)
-                # n_w = len(self.word_to_img[w])
                 N = self.num_imgs
                 t[w] = (n_wj/n_j) * np.log(N/n_w)
             self.BoW[img] = t
@@ -250,7 +239,7 @@ def build_database(load_path, k, L, method, save_path):
     print('Building Histgram for each images')
     db.build_histgram(db.vocabulary_tree)
 
-    # print('Building BoW for each images')
+    print('Building BoW for each images')
     db.build_BoW()
 
     print('Saving the database to {}'.format(save_path))
