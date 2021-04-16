@@ -3,6 +3,7 @@ The goal of this project is to recognize the DVD covers in the given image and r
 
 
 # Folder Stucture
+You need to have your own data structure as following.
 ```
 +-- src
     +-- database.py
@@ -10,7 +11,16 @@ The goal of this project is to recognize the DVD covers in the given image and r
     +-- homography.py
 +-- data
     +-- DVDcovers
+            +-- DVD_name.jpg
+            +-- .
+            +-- .
+            +-- .
     +-- test
+            +-- image_01.jpg
+            +-- image_02.jpg
+            +-- .
+            +-- .
+            +-- .
 +-- docs
 ```
 # Run
