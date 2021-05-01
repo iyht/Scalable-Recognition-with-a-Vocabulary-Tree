@@ -42,30 +42,32 @@ Saving the database to data_sift.txt
 Process of querying 
 ```
 Loading the database
-0: scores: -5.548730673820982, image: ../data/DVDcovers/antz.jpg
-1: scores: -4.982545807436332, image: ../data/DVDcovers/mystic_river.jpg
-2: scores: -4.392313145491339, image: ../data/DVDcovers/o_brother_where_art_thou.jpg
-3: scores: -3.5356021232106754, image: ../data/DVDcovers/tarzan.jpg
-4: scores: -3.4259076022248047, image: ../data/DVDcovers/grimm_season_two.jpg
-5: scores: -3.363552110917791, image: ../data/DVDcovers/aladdin.jpg
-6: scores: -3.334311474598981, image: ../data/DVDcovers/shrek2.jpg
-7: scores: -3.2717909507672767, image: ../data/DVDcovers/captain_america_winter_soldier.jpg
-8: scores: -3.250774872618388, image: ../data/DVDcovers/pomepii.jpg
-9: scores: -3.22014862419896, image: ../data/DVDcovers/jumanji.jpg
-Running RANSAC... Image: ../data/DVDcovers/antz.jpg Inliers: 44
-Running RANSAC... Image: ../data/DVDcovers/mystic_river.jpg Inliers: 47
-Running RANSAC... Image: ../data/DVDcovers/o_brother_where_art_thou.jpg Inliers: 10
-Running RANSAC... Image: ../data/DVDcovers/tarzan.jpg Inliers: 4
-Running RANSAC... Image: ../data/DVDcovers/grimm_season_two.jpg Inliers: 6
-Running RANSAC... Image: ../data/DVDcovers/aladdin.jpg Inliers: 4
-Running RANSAC... Image: ../data/DVDcovers/shrek2.jpg Inliers: 458
-Running RANSAC... Image: ../data/DVDcovers/captain_america_winter_soldier.jpg Inliers: 5
-Running RANSAC... Image: ../data/DVDcovers/pomepii.jpg Inliers: 5
-Running RANSAC... Image: ../data/DVDcovers/jumanji.jpg Inliers: 6
-The best match image: ../data/DVDcovers/shrek2.jpg
-Homography: [[ 1.21203793e-03  3.98035708e-03  4.71708624e-02]
- [-2.53473965e-03 -1.37920104e-05  9.98873338e-01]
- [ 2.06584262e-06 -9.21705020e-08  1.79610930e-03]]
+0: scores: -2.795583265523189, image: ../data/DVDcovers/antz.jpg
+1: scores: -1.9157748210404475, image: ../data/DVDcovers/o_brother_where_art_thou.jpg
+2: scores: -1.9093178618880344, image: ../data/DVDcovers/mystic_river.jpg
+3: scores: -1.7939076605071755, image: ../data/DVDcovers/toy_story.jpg
+4: scores: -1.7509253310436343, image: ../data/DVDcovers/world_war_Z.jpg
+5: scores: -1.746503545605861, image: ../data/DVDcovers/anastasia.jpg
+6: scores: -1.7339252689292404, image: ../data/DVDcovers/wanted.jpg
+7: scores: -1.7081165120755246, image: ../data/DVDcovers/once.jpg
+8: scores: -1.6730278848379108, image: ../data/DVDcovers/indiana_jones_and_the_raiders_of_the_lost_ark.jpg
+9: scores: -1.6599345737901579, image: ../data/DVDcovers/coyote_ugly.jpg
+
+Running RANSAC... Image: ../data/DVDcovers/antz.jpg Inliers: 15
+Running RANSAC... Image: ../data/DVDcovers/o_brother_where_art_thou.jpg Inliers: 16
+Running RANSAC... Image: ../data/DVDcovers/mystic_river.jpg Inliers: 8
+Running RANSAC... Image: ../data/DVDcovers/toy_story.jpg Inliers: 61
+Running RANSAC... Image: ../data/DVDcovers/world_war_Z.jpg Inliers: 3
+Running RANSAC... Image: ../data/DVDcovers/anastasia.jpg Inliers: 4
+Running RANSAC... Image: ../data/DVDcovers/wanted.jpg Inliers: 4
+Running RANSAC... Image: ../data/DVDcovers/once.jpg Inliers: 3
+Running RANSAC... Image: ../data/DVDcovers/indiana_jones_and_the_raiders_of_the_lost_ark.jpg Inliers: 3
+Running RANSAC... Image: ../data/DVDcovers/coyote_ugly.jpg Inliers: 4
+
+The best match image: ../data/DVDcovers/toy_story.jpg
+Homography: [[ 6.54908715e-06  1.12769156e-03  6.50655466e-01]
+ [-1.14684312e-03  2.29689828e-05  7.59370040e-01]
+ [-5.25944125e-08  4.10266206e-09  1.42116071e-03]]
 ```
 ![Query](./docs/ex_query.jpeg)
 ![DVD](./docs/ex_DVD.jpg)
