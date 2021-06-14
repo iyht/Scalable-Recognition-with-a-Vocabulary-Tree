@@ -1,5 +1,5 @@
 # Introduction
-The goal of this project is to recognize the DVD covers in the given image and retrieve from the database.The recognition scheme is based on paper from David et al., Scalable Recognition with a Vocabulary Tree[1]. The paper present a recognition scheme that scales efficiently to large number of objects.
+The goal of this project is to recognize the DVD covers in the given image and retrieve them from the database. The recognition scheme is based on a paper from David et al., Scalable Recognition with a Vocabulary Tree[1]. The paper present a recognition scheme that scales efficiently to large number of objects.
 
 
 # Project Stucture
